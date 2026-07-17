@@ -20,6 +20,16 @@
   var NOMES_DIAS = ["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"];
   var NOMES_MESES = ["janeiro","fevereiro","março","abril","maio","junho","julho","agosto","setembro","outubro","novembro","dezembro"];
 
+  /* ---------- Firebase / sincronização ---------- */
+  var firebaseApp = null;
+  var auth = null;
+  var db = null;
+  var usuarioAtual = null;
+  var syncTimer = null;
+  var inicializando = true;
+  var erroConfiguracao = false;
+  var statusSync = "offline";
+
   /* ---------- Estado ---------- */
   var estado = {
     abaAtiva: "hoje",
@@ -45,6 +55,42 @@
     salvar(CHAVE_TOPICOS, estado.topicos);
     salvar(CHAVE_TAREFAS, estado.tarefas);
     salvar(CHAVE_CONCLUSOES, estado.conclusoes);
+    agendarSincronizacao();
+  }
+
+  function dadosAtuais(){
+    return {topicos:estado.topicos,tarefas:estado.tarefas,conclusoes:estado.conclusoes,atualizadoEm:Date.now()};
+  }
+
+  function agendarSincronizacao(){
+    if(!usuarioAtual || !db) return;
+    statusSync = "salvando";
+    render();
+    clearTimeout(syncTimer);
+    syncTimer = setTimeout(async function(){
+      try{
+        await db.collection("usuarios").doc(usuarioAtual.uid).set(dadosAtuais(), {merge:true});
+        statusSync = "salvo";
+      }catch(e){
+        console.error(e); statusSync = "erro";
+      }
+      render();
+    }, 350);
+  }
+
+  async function carregarDaNuvem(user){
+    var ref = db.collection("usuarios").doc(user.uid);
+    var snap = await ref.get();
+    if(snap.exists){
+      var d=snap.data()||{};
+      estado.topicos=Array.isArray(d.topicos)?d.topicos:[];
+      estado.tarefas=Array.isArray(d.tarefas)?d.tarefas:[];
+      estado.conclusoes=d.conclusoes&&typeof d.conclusoes==="object"?d.conclusoes:{};
+      salvar(CHAVE_TOPICOS, estado.topicos); salvar(CHAVE_TAREFAS, estado.tarefas); salvar(CHAVE_CONCLUSOES, estado.conclusoes);
+    }else{
+      await ref.set(dadosAtuais());
+    }
+    statusSync="salvo";
   }
   function gerarId(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
 
@@ -75,9 +121,16 @@
     return null;
   }
 
+  function renderCarregando(){ return '<main class="tela-central"><div class="loader-ios"></div><p>Preparando seu organizador…</p></main>'; }
+  function renderConfigPendente(){ return '<main class="tela-central"><section class="login-card"><div class="app-icon">✓</div><h1>Conecte ao Firebase</h1><p>Preencha o arquivo <strong>assets/firebase-config.js</strong> com as credenciais do seu projeto Firebase.</p><div class="aviso-ios">O pacote inclui um guia completo no README.</div></section></main>'; }
+  function renderLogin(){ return '<main class="tela-central"><section class="login-card"><div class="app-icon">✓</div><h1>Meu Organizador</h1><p>Suas tarefas, calendário e progresso sincronizados em todos os dispositivos.</p><button class="btn-login-google" data-acao="entrar-google"><span class="google-g">G</span>Continuar com Google</button><small>Os dados ficam vinculados à sua conta.</small></section></main>'; }
+
   /* ---------- Render raiz ---------- */
   function render(){
     var app = document.getElementById("app");
+    if(inicializando){ app.innerHTML=renderCarregando(); return; }
+    if(erroConfiguracao){ app.innerHTML=renderConfigPendente(); ligarEventos(); return; }
+    if(!usuarioAtual){ app.innerHTML=renderLogin(); ligarEventos(); return; }
     var html = "";
     html += renderHeader();
     html += renderNav();
@@ -99,9 +152,11 @@
     var d = new Date();
     var diasSemanaLongo = ["domingo","segunda-feira","terça-feira","quarta-feira","quinta-feira","sexta-feira","sábado"];
     var dataFormatada = diasSemanaLongo[d.getDay()]+", "+d.getDate()+" de "+NOMES_MESES[d.getMonth()]+" de "+d.getFullYear();
+    var nome = usuarioAtual && (usuarioAtual.displayName || usuarioAtual.email || "Conta");
+    var syncLabel = statusSync==="salvando"?"Salvando…":statusSync==="erro"?"Erro ao sincronizar":"Sincronizado";
     return '<header class="topo">'
-      + '<h1>Meu Organizador</h1>'
-      + '<div class="data-hoje">'+dataFormatada+'</div>'
+      + '<div><h1>Meu Organizador</h1><div class="data-hoje">'+dataFormatada+'</div></div>'
+      + '<div class="conta-ios"><div class="sync-status '+statusSync+'"><span></span>'+syncLabel+'</div><button class="avatar-conta" data-acao="sair" title="Sair">'+escapeHTML((nome||"U").charAt(0).toUpperCase())+'</button></div>'
       + '</header>';
   }
 
@@ -555,7 +610,7 @@
   function ligarEventos(){
     var app = document.getElementById("app");
 
-    app.querySelectorAll("[data-acao]").forEach(function(el){
+    app.querySelectorAll("[data-acao], [data-aba]").forEach(function(el){
       el.addEventListener("click", function(ev){
         var acao = el.getAttribute("data-acao");
         manipularAcao(acao, el, ev);
@@ -593,6 +648,10 @@
     }
 
     switch(acao){
+      case "entrar-google":
+        entrarComGoogle(); break;
+      case "sair":
+        if(auth) auth.signOut(); break;
       case "ir-tarefas":
         estado.abaAtiva = "tarefas"; render(); break;
 
@@ -677,7 +736,7 @@
         var chave = chaveConclusao(tarefaId, dataISO);
         if(estado.conclusoes[chave]) delete estado.conclusoes[chave];
         else estado.conclusoes[chave] = true;
-        salvar(CHAVE_CONCLUSOES, estado.conclusoes);
+        persistirTudo();
         render(); break;
 
       case "mes-anterior":
@@ -777,6 +836,34 @@
     persistirTudo();
   }
 
+  async function entrarComGoogle(){
+    try{
+      var provider = new firebase.auth.GoogleAuthProvider();
+      await auth.signInWithPopup(provider);
+    }catch(e){
+      console.error(e);
+      alert("Não foi possível entrar com o Google. Verifique se o provedor Google está ativado no Firebase Authentication.");
+    }
+  }
+
+  function iniciarFirebase(){
+    try{
+      if(!window.FIREBASE_CONFIG || !window.FIREBASE_CONFIG.apiKey || String(window.FIREBASE_CONFIG.apiKey).indexOf("COLE_")===0){
+        inicializando=false; erroConfiguracao=true; render(); return;
+      }
+      firebaseApp = firebase.initializeApp(window.FIREBASE_CONFIG);
+      auth = firebase.auth(); db = firebase.firestore();
+      auth.onAuthStateChanged(async function(user){
+        usuarioAtual=user||null;
+        if(user){
+          try{ await carregarDaNuvem(user); }catch(e){ console.error(e); statusSync="erro"; }
+        }
+        inicializando=false; render();
+      });
+    }catch(e){ console.error(e); inicializando=false; erroConfiguracao=true; render(); }
+  }
+
   /* ---------- Início ---------- */
   render();
+  iniciarFirebase();
 })();
