@@ -6,12 +6,12 @@
   --ink:#1c1c1e;
   --ink-soft:#6e6e73;
   --border:rgba(60,60,67,.16);
-  --accent:#007aff;
-  --accent-soft:rgba(0,122,255,.12);
-  --highlight:#5856d6;
-  --highlight-soft:rgba(88,86,214,.12);
-  --danger:#ff3b30;
-  --danger-soft:rgba(255,59,48,.12);
+  --accent:#1c1c1e;
+  --accent-soft:rgba(28,28,30,.07);
+  --highlight:#48484a;
+  --highlight-soft:rgba(28,28,30,.07);
+  --danger:#1c1c1e;
+  --danger-soft:rgba(28,28,30,.07);
   --font-display:-apple-system,BlinkMacSystemFont,"Helvetica Neue",Helvetica,Arial,sans-serif;
   --font-body:-apple-system,BlinkMacSystemFont,"Helvetica Neue",Helvetica,Arial,sans-serif;
   --font-mono:"SFMono-Regular",Consolas,"Liberation Mono",monospace;
@@ -23,6 +23,8 @@ html,body{margin:0;padding:0}
 body{min-height:100vh;background:linear-gradient(180deg,#f7f7fa 0%,#f2f2f7 38%,#ececf1 100%);color:var(--ink);font-family:var(--font-body);-webkit-font-smoothing:antialiased}
 button,input,select,textarea{font:inherit}
 button{cursor:pointer;-webkit-tap-highlight-color:transparent}
+svg.icone{width:18px;height:18px;stroke:currentColor;stroke-width:1.8;fill:none;stroke-linecap:round;stroke-linejoin:round;display:block}
+.avatar-topico{width:20px;height:20px;border-radius:50%;color:#fff;font-size:.66rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex:0 0 auto}
 .app{max-width:980px;margin:0 auto;padding:34px 22px 90px}
 header.topo{display:flex;align-items:flex-end;justify-content:space-between;gap:18px;margin-bottom:18px;padding:0 4px}
 header.topo h1{font-size:2.35rem;line-height:1.05;letter-spacing:-.045em;font-weight:750;margin:0}
@@ -35,10 +37,10 @@ nav.abas button.ativa{background:#fff;color:var(--ink);box-shadow:0 2px 8px rgba
 h2.titulo-secao{font-size:1.24rem;letter-spacing:-.02em;font-weight:700;margin:0 0 4px}
 p.sub-secao{color:var(--ink-soft);font-size:.91rem;margin:0 0 18px}
 .vazio{text-align:center;padding:34px 18px;color:var(--ink-soft)}
-.vazio .icone-vazio{font-size:2.25rem;margin-bottom:10px;display:block}
+.vazio .icone-vazio{width:38px;height:38px;margin:0 auto 10px;color:var(--ink-soft)}
 .vazio strong{display:block;color:var(--ink);font-size:1.12rem;margin-bottom:6px;font-weight:700}
 .vazio button{margin-top:15px}
-.btn{border:0;border-radius:11px;padding:9px 15px;font-weight:650;font-size:.88rem;background:var(--accent);color:#fff;transition:transform .12s ease,opacity .15s ease,filter .15s ease}
+.btn{border:0;border-radius:11px;padding:9px 15px;font-weight:650;font-size:.88rem;background:var(--accent);color:#fff;transition:transform .12s ease,opacity .15s ease,filter .15s ease;display:inline-flex;align-items:center;justify-content:center;gap:6px}
 .btn:hover{filter:brightness(1.04)}.btn:active{transform:scale(.97)}
 .btn.secundario{background:var(--accent-soft);color:var(--accent)}
 .btn.perigo{background:var(--danger)}
@@ -48,15 +50,16 @@ p.sub-secao{color:var(--ink-soft);font-size:.91rem;margin:0 0 18px}
 .lista-tarefas{list-style:none;margin:0;padding:0}
 .item-tarefa{display:flex;align-items:flex-start;gap:12px;padding:13px 2px;border-bottom:1px solid var(--border)}
 .item-tarefa:last-child{border-bottom:0}
-.check{width:24px;height:24px;border-radius:50%;border:2px solid #c7c7cc;flex:0 0 auto;margin-top:1px;background:#fff;display:flex;align-items:center;justify-content:center;color:#fff;font-size:.82rem;transition:.16s ease}
+.check{width:24px;height:24px;border-radius:50%;border:2px solid #c7c7cc;flex:0 0 auto;margin-top:1px;background:#fff;display:flex;align-items:center;justify-content:center;color:#fff;transition:.16s ease;padding:0}
+.check svg.icone{width:13px;height:13px;stroke-width:2.6}
 .check.marcado{background:var(--accent);border-color:var(--accent)}
 .item-tarefa .conteudo{flex:1;min-width:0}
 .item-tarefa .titulo-tarefa{font-weight:600;font-size:.98rem;line-height:1.3}
 .item-tarefa.concluida .titulo-tarefa{text-decoration:line-through;color:var(--ink-soft)}
 .item-tarefa .meta{font-size:.76rem;color:var(--ink-soft);margin-top:5px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-.pilula-topico{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:999px;font-size:.73rem;font-weight:650}
+.pilula-topico{display:inline-flex;align-items:center;gap:5px;padding:3px 9px 3px 3px;border-radius:999px;font-size:.73rem;font-weight:650}
 .acoes-tarefa{display:flex;gap:3px;flex:0 0 auto}
-.icone-btn{background:transparent;border:0;color:var(--ink-soft);font-size:.96rem;padding:6px 7px;border-radius:9px}
+.icone-btn{background:transparent;border:0;color:var(--ink-soft);padding:6px 7px;border-radius:9px;display:flex;align-items:center;justify-content:center;min-height:0}
 .icone-btn:hover{background:rgba(118,118,128,.10);color:var(--ink)}
 .grupo-topico{margin-bottom:16px}.grupo-topico:last-child{margin-bottom:0}
 .cabecalho-grupo{display:flex;align-items:center;gap:8px;margin-bottom:8px}.cabecalho-grupo .nome-topico{font-weight:700;font-size:1.04rem}
@@ -76,7 +79,7 @@ p.sub-secao{color:var(--ink-soft);font-size:.91rem;margin:0 0 18px}
 .grade-mes{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}.celula-dia{aspect-ratio:1/1;border-radius:12px;border:0;background:#f2f2f7;padding:7px 6px;display:flex;flex-direction:column;justify-content:space-between;position:relative}.celula-dia.fora-mes{opacity:.3}.celula-dia.hoje{box-shadow:inset 0 0 0 2px var(--accent)}.celula-dia .num-dia{font-size:.77rem;font-weight:650}.celula-dia button.clique-dia{position:absolute;inset:0;background:none;border:0}.pontos-dia{display:flex;flex-wrap:wrap;gap:3px}.ponto{width:6px;height:6px;border-radius:50%}
 .abas-topico-evolucao{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:18px}.chip-topico{border:0;background:#f2f2f7;border-radius:999px;padding:7px 13px;font-size:.82rem;font-weight:650;color:var(--ink-soft);display:flex;align-items:center;gap:6px}.chip-topico.ativo{color:var(--accent);background:var(--accent-soft)}
 .estatisticas{display:flex;gap:11px;margin-bottom:18px;flex-wrap:wrap}.estat{background:#f2f2f7;border-radius:14px;padding:13px 15px;min-width:110px;flex:1}.estat .valor{font-size:1.45rem;font-weight:750;letter-spacing:-.03em}.estat .rotulo{font-size:.7rem;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.03em;margin-top:3px}
-.heatmap{display:flex;gap:3px;overflow-x:auto;padding-bottom:7px}.coluna-semana{display:flex;flex-direction:column;gap:3px}.quadrado-dia{width:13px;height:13px;border-radius:3px;background:#e5e5ea}.legenda-heatmap{display:flex;align-items:center;gap:6px;margin-top:9px;font-size:.72rem;color:var(--ink-soft)}.legenda-heatmap .quadrado-dia{width:11px;height:11px}
+.heatmap{display:flex;gap:2.5px;overflow-x:auto;padding-bottom:7px}.coluna-semana{display:flex;flex-direction:column;gap:2.5px;flex:0 0 auto}.quadrado-dia{width:9px;height:9px;border-radius:2.5px;background:#e5e5ea}.legenda-heatmap{display:flex;align-items:center;gap:6px;margin-top:9px;font-size:.72rem;color:var(--ink-soft)}.legenda-heatmap .quadrado-dia{width:11px;height:11px}
 @media(max-width:650px){.app{padding:22px 14px 94px}header.topo{align-items:flex-start;flex-direction:column;gap:5px;padding:0 4px}header.topo h1{font-size:2rem}.cartao{padding:18px 16px;border-radius:16px}nav.abas{position:fixed;left:10px;right:10px;bottom:10px;top:auto;margin:0;z-index:40;box-shadow:0 10px 40px rgba(0,0,0,.18)}nav.abas button{padding:10px 4px;font-size:.78rem}.estatisticas{gap:8px}.estat{min-width:90px;padding:11px}.grade-mes,.grade-semana{gap:4px}.celula-dia{border-radius:9px;padding:5px 4px}}
 
 /* Integração Firebase e refinamentos iOS */
@@ -85,50 +88,49 @@ button{min-height:44px}
 .tela-central{min-height:calc(100vh - 80px);display:grid;place-items:center;padding:24px}
 .login-card{width:min(430px,100%);background:rgba(255,255,255,.82);border:1px solid rgba(255,255,255,.9);border-radius:28px;padding:34px 28px;text-align:center;box-shadow:0 24px 70px rgba(0,0,0,.10);backdrop-filter:blur(30px);-webkit-backdrop-filter:blur(30px)}
 .login-card h1{margin:16px 0 8px;font-size:2rem;letter-spacing:-.045em}.login-card p{margin:0 auto 24px;color:var(--ink-soft);line-height:1.45;max-width:330px}.login-card small{display:block;margin-top:16px;color:var(--ink-soft)}
-.app-icon{width:76px;height:76px;border-radius:18px;margin:auto;display:grid;place-items:center;background:linear-gradient(145deg,#0a84ff,#0064d8);color:#fff;font-size:2.5rem;font-weight:700;box-shadow:0 14px 30px rgba(0,122,255,.28)}
-.btn-login-google{width:100%;border:0;border-radius:14px;background:#fff;color:#1c1c1e;font-weight:650;box-shadow:0 2px 10px rgba(0,0,0,.10);display:flex;align-items:center;justify-content:center;gap:10px;padding:12px 16px}.btn-login-google:active{transform:scale(.98)}.google-g{font-weight:800;color:#4285f4;font-size:1.1rem}
-.aviso-ios{background:rgba(0,122,255,.10);color:#005bb5;border-radius:14px;padding:12px 14px;font-size:.88rem;text-align:left}
-.loader-ios{width:28px;height:28px;border:3px solid rgba(60,60,67,.18);border-top-color:#007aff;border-radius:50%;animation:girar .8s linear infinite}@keyframes girar{to{transform:rotate(360deg)}}.tela-central>p{color:var(--ink-soft)}
-.conta-ios{display:flex;align-items:center;gap:10px}.avatar-conta{width:38px;height:38px;min-height:38px;border:0;border-radius:50%;background:linear-gradient(145deg,#0a84ff,#5856d6);color:white;font-weight:700;box-shadow:0 4px 12px rgba(0,0,0,.12)}
-.sync-status{display:flex;align-items:center;gap:6px;color:var(--ink-soft);font-size:.75rem}.sync-status span{width:7px;height:7px;border-radius:50%;background:#34c759}.sync-status.salvando span{background:#ff9f0a;animation:pulsar 1s infinite}.sync-status.erro span{background:#ff3b30}@keyframes pulsar{50%{opacity:.35}}
+.app-icon{width:76px;height:76px;border-radius:18px;margin:auto;display:grid;place-items:center;background:var(--ink);color:#fff;box-shadow:0 14px 30px rgba(0,0,0,.18)}.app-icon svg.icone{width:32px;height:32px;stroke:#fff}
+.btn-login-google{width:100%;border:1px solid var(--border);border-radius:14px;background:#fff;color:#1c1c1e;font-weight:650;box-shadow:0 2px 10px rgba(0,0,0,.06);display:flex;align-items:center;justify-content:center;gap:10px;padding:12px 16px}.btn-login-google:active{transform:scale(.98)}.google-g{font-weight:800;color:var(--ink);font-size:1.1rem}
+.aviso-ios{background:var(--surface-alt);color:var(--ink);border:1px solid var(--border);border-radius:14px;padding:12px 14px;font-size:.88rem;text-align:left}
+.loader-ios{width:28px;height:28px;border:3px solid rgba(60,60,67,.18);border-top-color:var(--ink);border-radius:50%;animation:girar .8s linear infinite}@keyframes girar{to{transform:rotate(360deg)}}.tela-central>p{color:var(--ink-soft)}
+.conta-ios{display:flex;align-items:center;gap:10px}.avatar-conta{width:38px;height:38px;min-height:38px;border:0;border-radius:50%;background:var(--ink);color:white;font-weight:700;box-shadow:0 4px 12px rgba(0,0,0,.12)}
+.sync-status{display:flex;align-items:center;gap:6px;color:var(--ink-soft);font-size:.75rem}.sync-status span{width:7px;height:7px;border-radius:50%;background:var(--ink)}.sync-status.salvando span{background:var(--ink-soft);animation:pulsar 1s infinite}.sync-status.erro span{background:transparent;border:1.5px solid var(--ink);width:5px;height:5px}@keyframes pulsar{50%{opacity:.3}}
 .modal{animation:sheetIn .25s cubic-bezier(.2,.8,.2,1)}@keyframes sheetIn{from{opacity:0;transform:translateY(18px) scale(.985)}to{opacity:1;transform:none}}
 @media(max-width:650px){.app{padding-bottom:calc(102px + env(safe-area-inset-bottom))}nav.abas{bottom:calc(10px + env(safe-area-inset-bottom))}.modal{align-self:end;border-radius:24px 24px 0 0;max-width:none;padding-bottom:calc(24px + env(safe-area-inset-bottom))}.fundo-modal{align-items:flex-end;padding:0}.sync-status{display:none}}
 
 /* Ajustes solicitados — listas alternantes, tarefas compactas e evolução monocromática */
 header.topo h1{margin-bottom:0}
-header.topo .data-hoje{margin-top:16px;margin-bottom:4px;line-height:1.35}
+header.topo .data-hoje{margin-top:10px;margin-bottom:4px;line-height:1.35}
 .cabecalho-pagina-tarefas{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap}
 .lista-topicos-alternantes{display:flex;flex-direction:column;gap:12px}
 .grupo-topico{padding:0;overflow:hidden;margin-bottom:0}
 .cabecalho-grupo{margin:0;min-height:58px;padding:7px 10px 7px 8px;gap:6px}
 .alternador-topico{min-height:44px;flex:1;min-width:0;display:flex;align-items:center;gap:9px;border:0;background:transparent;text-align:left;padding:5px 7px;border-radius:12px;color:var(--ink)}
 .alternador-topico:active{background:rgba(118,118,128,.08)}
-.seta-alternador{font-size:1.55rem;line-height:1;color:var(--ink-soft);transform:rotate(0deg);transition:transform .18s ease}
+.seta-alternador{display:flex;color:var(--ink-soft);transform:rotate(0deg);transition:transform .18s ease}
+.seta-alternador svg.icone{width:16px;height:16px}
 .grupo-topico.aberto .seta-alternador{transform:rotate(90deg)}
-.icone-topico{font-size:1.06rem}.contador-topico{margin-left:auto;min-width:24px;height:24px;padding:0 7px;border-radius:999px;display:grid;place-items:center;background:#f2f2f7;color:var(--ink-soft);font-size:.73rem;font-weight:700}
+.contador-topico{margin-left:auto;min-width:24px;height:24px;padding:0 7px;border-radius:999px;display:grid;place-items:center;background:#f2f2f7;color:var(--ink-soft);font-size:.73rem;font-weight:700}
 .acoes-topico{display:flex;align-items:center;gap:1px;flex:0 0 auto}
 .btn-add-tarefa-topico{min-height:34px;border:0;border-radius:9px;background:var(--accent-soft);color:var(--accent);padding:6px 9px;font-size:.76rem;font-weight:700}
 .conteudo-topico{border-top:1px solid var(--border);padding:0 14px 4px}
 .topico-sem-tarefas,.evolucao-vazia{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 2px;color:var(--ink-soft);font-size:.86rem}
 .topico-sem-tarefas button,.evolucao-vazia button{border:0;background:transparent;color:var(--accent);font-weight:650;min-height:34px}
 .item-tarefa{align-items:center;gap:8px;padding:10px 1px;min-width:0}
-.check{width:18px;height:18px;min-height:18px;border-width:1.5px;font-size:.65rem;margin:0}
+.check{width:18px;height:18px;min-height:18px;border-width:1.5px;margin:0}
+.check svg.icone{width:11px;height:11px;stroke-width:3}
 .item-tarefa .conteudo.linha-tarefa{display:flex;align-items:center;gap:7px;flex-wrap:nowrap;overflow:hidden;white-space:nowrap}
 .item-tarefa .titulo-tarefa{font-size:.91rem;line-height:1.2;overflow:hidden;text-overflow:ellipsis;flex:0 1 auto;min-width:40px}
 .item-tarefa .pilula-topico{padding:2px 7px;font-size:.68rem;flex:0 0 auto}
 .info-recorrencia,.info-horario{font-size:.72rem;color:var(--ink-soft);flex:0 0 auto}
 .info-recorrencia::before{content:'· ';color:#aeaeb2}
 .info-horario::before{content:'· ';color:#aeaeb2}
-.acoes-tarefa{margin-left:auto}.acoes-tarefa .icone-btn{min-height:32px;padding:4px 5px;font-size:.84rem}
+.acoes-tarefa{margin-left:auto}.acoes-tarefa .icone-btn{min-height:32px;padding:4px 5px}.acoes-tarefa .icone-btn svg.icone{width:15px;height:15px}
 .cabecalho-evolucao{padding:4px 4px 2px}.grade-evolucao{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
 .cabecalho-evolucao-topo{display:flex;align-items:baseline;gap:18px;flex-wrap:wrap;margin-bottom:2px}
-.legenda-topo{justify-content:flex-start;margin:0;flex-wrap:nowrap;white-space:nowrap}
-@media(max-width:650px){.cabecalho-evolucao-topo{flex-direction:column;align-items:flex-start;gap:6px}.legenda-topo{flex-wrap:wrap;white-space:normal}}
+.legenda-heatmap.legenda-topo{justify-content:flex-start;margin:0;flex-wrap:nowrap;white-space:nowrap}
+@media(max-width:650px){.cabecalho-evolucao-topo{flex-direction:column;align-items:flex-start;gap:6px}.legenda-heatmap.legenda-topo{flex-wrap:wrap;white-space:normal}}
 .quadro-evolucao{margin-bottom:0;min-width:0}.titulo-quadro-evolucao{display:flex;align-items:center;gap:9px;margin-bottom:15px;font-size:1.03rem}.titulo-quadro-evolucao strong{font-weight:750}
 .quadro-evolucao .estatisticas{gap:7px}.quadro-evolucao .estat{min-width:0;padding:10px}.quadro-evolucao .estat .valor{font-size:1.18rem}.quadro-evolucao .estat .rotulo{font-size:.61rem}
 .quadrado-dia{background:#ececef}.quadrado-dia.nenhuma{background:#d1d1d6}.quadrado-dia.parcial{background:#8e8e93}.quadrado-dia.total{background:#000}.quadrado-dia.sem-dados{background:#f2f2f7}.quadrado-dia.futuro{background:#f2f2f7;opacity:.38}
 .legenda-heatmap{justify-content:flex-end;gap:12px;flex-wrap:wrap}.item-legenda{display:inline-flex;align-items:center;gap:5px}.item-legenda .quadrado-dia{display:inline-block;width:11px;height:11px}
-.erro-app{max-width:420px;margin:60px auto;text-align:center;padding:28px;border:1px solid var(--border);border-radius:18px;background:var(--surface-solid)}
-.erro-app h2{margin:0 0 8px;font-size:1.1rem}
-.erro-app p{color:var(--ink-soft);font-size:.88rem;margin:0 0 16px}
 @media(max-width:760px){.grade-evolucao{grid-template-columns:1fr}.acoes-topico .icone-btn{display:none}.btn-add-tarefa-topico{font-size:.72rem;padding:5px 7px}.conteudo-topico{padding:0 10px 3px}.item-tarefa{gap:6px}.item-tarefa .conteudo.linha-tarefa{gap:5px}.item-tarefa .pilula-topico{max-width:105px;overflow:hidden;text-overflow:ellipsis}.acoes-tarefa .icone-btn{padding:3px}.cabecalho-pagina-tarefas{align-items:flex-start}}

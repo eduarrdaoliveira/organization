@@ -6,16 +6,29 @@
   var CHAVE_TAREFAS = "organizador_tarefas_v1";
   var CHAVE_CONCLUSOES = "organizador_conclusoes_v1";
 
-  var PALETA_CORES = [
-    "#3D6B5C","#7A5C8E","#C97B63","#C9A227","#4C7A9E",
-    "#B5566B","#6E7B45","#5B6B78","#3D8A82","#8C4A6B"
-  ];
+  var TONS_CINZA = ["#1c1c1e","#48484a","#6e6e73","#8e8e93","#aeaeb2","#c7c7cc"];
 
-  var PALETA_ICONES = [
-    "🎓","📚","💼","📈","💪","🏋️","💊","🧘","🏠","🧹",
-    "🛒","🍎","💰","📅","✏️","🎨","🐾","🚿","😴","🧺",
-    "🎯","🚗","📖","🧴"
-  ];
+  /* ---------- Ícones (SVG inline, sem emoji) ---------- */
+  var ICONES = {
+    check:'<svg class="icone" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>',
+    plus:'<svg class="icone" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>',
+    x:'<svg class="icone" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>',
+    chevronLeft:'<svg class="icone" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>',
+    chevronRight:'<svg class="icone" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>',
+    pencil:'<svg class="icone" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>',
+    trash:'<svg class="icone" viewBox="0 0 24 24"><path d="M4 7h16"/><path d="M9 7V4h6v3"/><path d="M6 7l1 13h10l1-13"/></svg>',
+    circlePlus:'<svg class="icone" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>',
+    clipboard:'<svg class="icone" viewBox="0 0 24 24"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v1"/><path d="M9 11h6M9 15h6"/></svg>',
+    sun:'<svg class="icone" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.5"/><path d="M12 3v2M12 19v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M3 12h2M19 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4"/></svg>',
+    calendar:'<svg class="icone" viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 3v4M16 3v4M4 10h16"/></svg>',
+    chart:'<svg class="icone" viewBox="0 0 24 24"><path d="M5 19V10M12 19V5M19 19v-7"/></svg>',
+    checkCircle:'<svg class="icone" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8.5 12.3l2.4 2.4 4.6-5.2"/></svg>'
+  };
+  function ic(nome){ return ICONES[nome] || ""; }
+  function iniciais(nome){
+    var n = (nome||"?").trim();
+    return n ? n.charAt(0).toUpperCase() : "?";
+  }
 
   var NOMES_DIAS = ["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"];
   var NOMES_MESES = ["janeiro","fevereiro","março","abril","maio","junho","julho","agosto","setembro","outubro","novembro","dezembro"];
@@ -33,7 +46,7 @@
   /* ---------- Estado ---------- */
   var estado = {
     abaAtiva: "hoje",
-    topicos: carregar(CHAVE_TOPICOS, []),
+    topicos: migrarTonsTopicos(carregar(CHAVE_TOPICOS, [])),
     tarefas: carregar(CHAVE_TAREFAS, []),
     conclusoes: carregar(CHAVE_CONCLUSOES, {}), // { "tarefaId_YYYY-MM-DD": true }
     mesCalendario: new Date(),
@@ -42,6 +55,17 @@
     topicosAbertos: {},
     modal: null // {tipo:'topico'|'tarefa'|'diaCalendario', dados:{...}}
   };
+
+  function migrarTonsTopicos(lista){
+    if(!Array.isArray(lista)) return [];
+    return lista.map(function(t, i){
+      if(!t || typeof t !== "object") return t;
+      if(TONS_CINZA.indexOf(t.cor) === -1){
+        t.cor = TONS_CINZA[i % TONS_CINZA.length];
+      }
+      return t;
+    });
+  }
 
   function carregar(chave, padrao){
     try{
@@ -60,23 +84,35 @@
   }
 
   function dadosAtuais(){
-    return {topicos:estado.topicos,tarefas:estado.tarefas,conclusoes:estado.conclusoes,atualizadoEm:Date.now()};
+    // remove valores "undefined" (o Firestore rejeita e derruba a gravação inteira)
+    return JSON.parse(JSON.stringify({topicos:estado.topicos,tarefas:estado.tarefas,conclusoes:estado.conclusoes,atualizadoEm:Date.now()}));
   }
+
+  var tentativasFalhas = 0;
 
   function agendarSincronizacao(){
     if(!usuarioAtual || !db) return;
     statusSync = "salvando";
     render();
     clearTimeout(syncTimer);
-    syncTimer = setTimeout(async function(){
-      try{
-        await db.collection("usuarios").doc(usuarioAtual.uid).set(dadosAtuais(), {merge:true});
-        statusSync = "salvo";
-      }catch(e){
-        console.error(e); statusSync = "erro";
-      }
+    syncTimer = setTimeout(function(){ tentarSincronizar(0); }, 350);
+  }
+
+  function tentarSincronizar(tentativa){
+    db.collection("usuarios").doc(usuarioAtual.uid).set(dadosAtuais(), {merge:true}).then(function(){
+      tentativasFalhas = 0;
+      statusSync = "salvo";
       render();
-    }, 350);
+    }).catch(function(e){
+      console.error("Erro ao sincronizar com o Firestore:", e);
+      if(tentativa < 2){
+        setTimeout(function(){ tentarSincronizar(tentativa+1); }, 1500);
+      } else {
+        tentativasFalhas++;
+        statusSync = "erro";
+        render();
+      }
+    });
   }
 
   async function carregarDaNuvem(user){
@@ -84,7 +120,7 @@
     var snap = await ref.get();
     if(snap.exists){
       var d=snap.data()||{};
-      estado.topicos=Array.isArray(d.topicos)?d.topicos:[];
+      estado.topicos=migrarTonsTopicos(Array.isArray(d.topicos)?d.topicos:[]);
       estado.tarefas=Array.isArray(d.tarefas)?d.tarefas:[];
       estado.conclusoes=d.conclusoes&&typeof d.conclusoes==="object"?d.conclusoes:{};
       salvar(CHAVE_TOPICOS, estado.topicos); salvar(CHAVE_TAREFAS, estado.tarefas); salvar(CHAVE_CONCLUSOES, estado.conclusoes);
@@ -123,8 +159,8 @@
   }
 
   function renderCarregando(){ return '<main class="tela-central"><div class="loader-ios"></div><p>Preparando seu organizador…</p></main>'; }
-  function renderConfigPendente(){ return '<main class="tela-central"><section class="login-card"><div class="app-icon">✓</div><h1>Conecte ao Firebase</h1><p>Preencha o arquivo <strong>assets/firebase-config.js</strong> com as credenciais do seu projeto Firebase.</p><div class="aviso-ios">O pacote inclui um guia completo no README.</div></section></main>'; }
-  function renderLogin(){ return '<main class="tela-central"><section class="login-card"><div class="app-icon">✓</div><h1>Meu Organizador</h1><p>Suas tarefas, calendário e progresso sincronizados em todos os dispositivos.</p><button class="btn-login-google" data-acao="entrar-google"><span class="google-g">G</span>Continuar com Google</button><small>Os dados ficam vinculados à sua conta.</small></section></main>'; }
+  function renderConfigPendente(){ return '<main class="tela-central"><section class="login-card"><div class="app-icon">'+ic("checkCircle")+'</div><h1>Conecte ao Firebase</h1><p>Preencha o arquivo <strong>assets/firebase-config.js</strong> com as credenciais do seu projeto Firebase.</p><div class="aviso-ios">O pacote inclui um guia completo no README.</div></section></main>'; }
+  function renderLogin(){ return '<main class="tela-central"><section class="login-card"><div class="app-icon">'+ic("checkCircle")+'</div><h1>Meu Organizador</h1><p>Suas tarefas, calendário e progresso sincronizados em todos os dispositivos.</p><button class="btn-login-google" data-acao="entrar-google"><span class="google-g">G</span>Continuar com Google</button><small>Os dados ficam vinculados à sua conta.</small></section></main>'; }
 
   /* ---------- Render raiz ---------- */
   function render(){
@@ -183,7 +219,7 @@
   function renderHoje(){
     if(estado.topicos.length===0){
       return '<div class="cartao">' + estadoVazio(
-        "🌱","Comece criando seus tópicos",
+        "circlePlus","Comece criando seus tópicos",
         "Crie tópicos como Faculdade, Estágio, Treinos ou Vitaminas para organizar suas tarefas.",
         '<button class="btn" data-acao="abrir-modal-topico">Criar primeiro tópico</button>'
       ) + '</div>';
@@ -193,7 +229,7 @@
 
     if(estado.tarefas.length===0){
       return '<div class="cartao">' + estadoVazio(
-        "🗒️","Nenhuma tarefa cadastrada ainda",
+        "clipboard","Nenhuma tarefa cadastrada ainda",
         "Adicione suas tarefas do dia a dia na aba Tarefas para vê-las aparecer aqui.",
         '<button class="btn" data-acao="ir-tarefas">Ir para Tarefas</button>'
       ) + '</div>';
@@ -201,7 +237,7 @@
 
     if(tarefasHoje.length===0){
       return '<div class="cartao">' + estadoVazio(
-        "☀️","Nada agendado para hoje",
+        "sun","Nada agendado para hoje",
         "Aproveite o dia livre ou adicione uma nova tarefa para hoje.",
         '<button class="btn" data-acao="abrir-modal-tarefa">Nova tarefa</button>'
       ) + '</div>';
@@ -227,24 +263,25 @@
     return !!estado.conclusoes[chaveConclusao(tarefaId, dataISO)];
   }
 
-  function renderItemTarefa(tarefa, dataISO, mostrarTopicoSempre){
+  function renderItemTarefa(tarefa, dataISO, mostrarAvatarTopico){
     var topico = topicoPorId(tarefa.topicoId);
     var marcada = concluidaEm(tarefa.id, dataISO);
     var corTopico = topico ? topico.cor : "#999";
     var html = '<li class="item-tarefa '+(marcada?"concluida":"")+'">';
-    html += '<button class="check '+(marcada?"marcado":"")+'" data-acao="alternar-conclusao" data-tarefa="'+tarefa.id+'" data-data="'+dataISO+'" aria-label="'+(marcada?'Desmarcar tarefa':'Concluir tarefa')+'">'+(marcada?"✓":"")+'</button>';
+    html += '<button class="check '+(marcada?"marcado":"")+'" data-acao="alternar-conclusao" data-tarefa="'+tarefa.id+'" data-data="'+dataISO+'" aria-label="'+(marcada?'Desmarcar tarefa':'Concluir tarefa')+'">'+(marcada?ic("check"):"")+'</button>';
     html += '<div class="conteudo linha-tarefa">';
     html += '<span class="titulo-tarefa">'+escapeHTML(tarefa.titulo)+'</span>';
     if(topico){
-      html += '<span class="pilula-topico" style="background:'+corTopico+'18;color:'+corTopico+'">'+topico.icone+' '+escapeHTML(topico.nome)+'</span>';
+      var avatarHtml = mostrarAvatarTopico ? ('<span class="avatar-topico" style="background:'+corTopico+'">'+escapeHTML(iniciais(topico.nome))+'</span>') : '';
+      html += '<span class="pilula-topico" style="background:'+corTopico+'14;color:'+corTopico+'">'+avatarHtml+escapeHTML(topico.nome)+'</span>';
     }
     if(tarefa.recorrencia==="diaria") html += '<span class="info-recorrencia">Diária</span>';
     if(tarefa.recorrencia==="semanal") html += '<span class="info-recorrencia">'+(tarefa.diasSemana||[]).map(function(n){return NOMES_DIAS[n];}).join(", ")+'</span>';
     if(tarefa.horario) html += '<span class="info-horario">'+tarefa.horario+'</span>';
     html += '</div>';
     html += '<div class="acoes-tarefa">';
-    html += '<button class="icone-btn" data-acao="editar-tarefa" data-tarefa="'+tarefa.id+'" title="Editar">✎</button>';
-    html += '<button class="icone-btn" data-acao="excluir-tarefa" data-tarefa="'+tarefa.id+'" title="Excluir">🗑</button>';
+    html += '<button class="icone-btn" data-acao="editar-tarefa" data-tarefa="'+tarefa.id+'" title="Editar">'+ic("pencil")+'</button>';
+    html += '<button class="icone-btn" data-acao="excluir-tarefa" data-tarefa="'+tarefa.id+'" title="Excluir">'+ic("trash")+'</button>';
     html += '</div>';
     html += '</li>';
     return html;
@@ -261,7 +298,7 @@
 
     if(estado.topicos.length===0){
       html += '<div class="cartao">' + estadoVazio(
-        "🌱","Nenhum tópico criado ainda",
+        "circlePlus","Nenhum tópico criado ainda",
         "Tópicos ajudam a separar sua rotina: Faculdade, Estágio, Treinos, Vitaminas, Casa...",
         '<button class="btn" data-acao="abrir-modal-topico">Criar tópico</button>'
       ) + '</div>';
@@ -275,13 +312,13 @@
       html += '<section class="cartao grupo-topico '+(aberto?'aberto':'fechado')+'">';
       html += '<div class="cabecalho-grupo">';
       html += '<button class="alternador-topico" data-acao="alternar-topico" data-topico="'+topico.id+'" aria-expanded="'+aberto+'">';
-      html += '<span class="seta-alternador">›</span><span class="icone-topico">'+topico.icone+'</span>';
+      html += '<span class="seta-alternador">'+ic("chevronRight")+'</span><span class="avatar-topico" style="background:'+topico.cor+'">'+escapeHTML(iniciais(topico.nome))+'</span>';
       html += '<span class="nome-topico" style="color:'+topico.cor+'">'+escapeHTML(topico.nome)+'</span>';
       html += '<span class="contador-topico">'+tarefasDoTopico.length+'</span></button>';
       html += '<div class="acoes-topico">';
       html += '<button class="btn-add-tarefa-topico" data-acao="abrir-modal-tarefa" data-topico="'+topico.id+'" title="Adicionar tarefa">＋ Tarefa</button>';
-      html += '<button class="icone-btn" data-acao="editar-topico" data-topico="'+topico.id+'" title="Editar tópico">✎</button>';
-      html += '<button class="icone-btn" data-acao="excluir-topico" data-topico="'+topico.id+'" title="Excluir tópico">🗑</button>';
+      html += '<button class="icone-btn" data-acao="editar-topico" data-topico="'+topico.id+'" title="Editar tópico">'+ic("pencil")+'</button>';
+      html += '<button class="icone-btn" data-acao="excluir-topico" data-topico="'+topico.id+'" title="Excluir tópico">'+ic("trash")+'</button>';
       html += '</div></div>';
       if(aberto){
         html += '<div class="conteudo-topico">';
@@ -312,13 +349,13 @@
 
     var html = '<div class="cartao">';
     html += '<div class="cabecalho-calendario">';
-    html += '<button class="btn fantasma pequeno" data-acao="mes-anterior">‹</button>';
+    html += '<button class="btn fantasma pequeno" data-acao="mes-anterior">'+ic("chevronLeft")+'</button>';
     html += '<span class="mes-atual">'+NOMES_MESES[mesIdx]+' de '+ano+'</span>';
-    html += '<button class="btn fantasma pequeno" data-acao="mes-proximo">›</button>';
+    html += '<button class="btn fantasma pequeno" data-acao="mes-proximo">'+ic("chevronRight")+'</button>';
     html += '</div>';
 
     if(estado.topicos.length===0){
-      html += estadoVazio("📅","Seu calendário está vazio","Crie tópicos e tarefas para ver seus compromissos aqui.",
+      html += estadoVazio("calendar","Seu calendário está vazio","Crie tópicos e tarefas para ver seus compromissos aqui.",
         '<button class="btn" data-acao="abrir-modal-topico">Criar tópico</button>');
       html += '</div>';
       return html;
@@ -374,7 +411,7 @@
     var html = '<div class="cartao">';
     html += '<div style="display:flex;justify-content:space-between;align-items:center;">';
     html += '<h2 class="titulo-secao" style="text-transform:capitalize;">'+titulo+'</h2>';
-    html += '<button class="icone-btn" data-acao="fechar-painel-dia">✕</button>';
+    html += '<button class="icone-btn" data-acao="fechar-painel-dia">'+ic("x")+'</button>';
     html += '</div>';
     if(tarefasDoDia.length===0){
       html += '<p style="color:var(--ink-soft);font-size:0.9rem;">Nenhuma tarefa para este dia.</p>';
@@ -391,7 +428,7 @@
   function renderEvolucao(){
     if(estado.topicos.length===0){
       return '<div class="cartao">' + estadoVazio(
-        "📈","Ainda não há dados de evolução",
+        "chart","Ainda não há dados de evolução",
         "Crie tópicos e conclua tarefas para acompanhar seu progresso e sequências aqui.",
         '<button class="btn" data-acao="abrir-modal-topico">Criar tópico</button>'
       ) + '</div>';
@@ -405,7 +442,7 @@
     estado.topicos.forEach(function(topico){
       var tarefasDoTopico = estado.tarefas.filter(function(t){ return t.topicoId===topico.id; });
       html += '<section class="cartao quadro-evolucao">';
-      html += '<div class="titulo-quadro-evolucao"><span>'+topico.icone+'</span><strong>'+escapeHTML(topico.nome)+'</strong></div>';
+      html += '<div class="titulo-quadro-evolucao"><span class="avatar-topico" style="background:'+topico.cor+'">'+escapeHTML(iniciais(topico.nome))+'</span><strong>'+escapeHTML(topico.nome)+'</strong></div>';
       if(tarefasDoTopico.length===0){
         html += '<div class="evolucao-vazia"><span>Nenhuma tarefa cadastrada.</span><button data-acao="abrir-modal-tarefa" data-topico="'+topico.id+'">Adicionar tarefa</button></div>';
       }else{
@@ -488,7 +525,7 @@
     var hoje = new Date(); hoje.setHours(0,0,0,0);
     var diaSemanaHoje = hoje.getDay();
     var fimGrade = new Date(hoje); fimGrade.setDate(fimGrade.getDate() + (6 - diaSemanaHoje));
-    var totalSemanas = 12;
+    var totalSemanas = 24;
     var inicioGrade = new Date(fimGrade); inicioGrade.setDate(inicioGrade.getDate() - (totalSemanas*7 - 1));
 
     var html = '<div class="heatmap">';
@@ -521,8 +558,8 @@
   }
 
   /* ---------- Estado vazio (helper) ---------- */
-  function estadoVazio(icone, titulo, texto, acaoHtml){
-    return '<div class="vazio"><span class="icone-vazio">'+icone+'</span><strong>'+titulo+'</strong><span>'+texto+'</span>'+(acaoHtml||"")+'</div>';
+  function estadoVazio(nomeIcone, titulo, texto, acaoHtml){
+    return '<div class="vazio"><span class="icone-vazio">'+ic(nomeIcone)+'</span><strong>'+titulo+'</strong><span>'+texto+'</span>'+(acaoHtml||"")+'</div>';
   }
 
   /* ---------- Modais ---------- */
@@ -536,19 +573,13 @@
 
   function renderModalTopico(dados){
     var editando = !!dados.id;
-    var cor = dados.cor || PALETA_CORES[0];
-    var icone = dados.icone || PALETA_ICONES[0];
+    var cor = dados.cor || TONS_CINZA[0];
     var html = '<div class="fundo-modal" data-acao="fechar-modal-fundo"><div class="modal" onclick="event.stopPropagation()">';
     html += '<h3>'+(editando?"Editar tópico":"Novo tópico")+'</h3>';
     html += '<div class="campo"><label>Nome</label><input type="text" id="campo-nome-topico" value="'+escapeAttr(dados.nome||"")+'" placeholder="Ex: Faculdade, Treinos, Casa..."></div>';
-    html += '<div class="campo"><label>Cor</label><div class="grade-cores">';
-    PALETA_CORES.forEach(function(c){
+    html += '<div class="campo"><label>Tom</label><div class="grade-cores">';
+    TONS_CINZA.forEach(function(c){
       html += '<button class="amostra-cor '+(c===cor?"selecionada":"")+'" style="background:'+c+'" data-acao="escolher-cor-topico" data-cor="'+c+'"></button>';
-    });
-    html += '</div></div>';
-    html += '<div class="campo"><label>Ícone</label><div class="grade-icones">';
-    PALETA_ICONES.forEach(function(ic){
-      html += '<button class="amostra-icone '+(ic===icone?"selecionada":"")+'" data-acao="escolher-icone-topico" data-icone="'+ic+'">'+ic+'</button>';
     });
     html += '</div></div>';
     html += '<div class="acoes-modal">';
@@ -567,7 +598,7 @@
     html += '<div class="campo"><label>Título</label><input type="text" id="campo-titulo-tarefa" value="'+escapeAttr(dados.titulo||"")+'" placeholder="Ex: Tomar vitamina D"></div>';
     html += '<div class="campo"><label>Tópico</label><select id="campo-topico-tarefa" class="seletor-topico-form">';
     estado.topicos.forEach(function(t){
-      html += '<option value="'+t.id+'" '+(dados.topicoId===t.id?"selected":"")+'>'+t.icone+' '+escapeHTML(t.nome)+'</option>';
+      html += '<option value="'+t.id+'" '+(dados.topicoId===t.id?"selected":"")+'>'+escapeHTML(t.nome)+'</option>';
     });
     html += '</select></div>';
 
@@ -621,7 +652,6 @@
     document.addEventListener("click", function(ev){
       if(!ev.target || !ev.target.closest) return;
 
-      // clique no fundo escuro (fora do cartão do modal) fecha o modal
       var fundo = ev.target.closest(".fundo-modal");
       if(fundo && ev.target === fundo){
         estado.modal = null; render(); return;
@@ -683,9 +713,6 @@
         estadoModalAtualDados().cor = el.getAttribute("data-cor");
         render(); break;
 
-      case "escolher-icone-topico":
-        estadoModalAtualDados().icone = el.getAttribute("data-icone");
-        render(); break;
 
       case "salvar-topico":
         salvarTopico(); break;
@@ -788,14 +815,13 @@
     var nomeInput = document.getElementById("campo-nome-topico");
     var nome = nomeInput.value.trim();
     if(!nome){ nomeInput.focus(); nomeInput.style.borderColor = "var(--danger)"; return; }
-    var cor = dados.cor || PALETA_CORES[0];
-    var icone = dados.icone || PALETA_ICONES[0];
+    var cor = dados.cor || TONS_CINZA[0];
 
     if(dados.id){
       var topico = topicoPorId(dados.id);
-      topico.nome = nome; topico.cor = cor; topico.icone = icone;
+      if(topico){ topico.nome = nome; topico.cor = cor; }
     } else {
-      estado.topicos.push({id:gerarId(), nome:nome, cor:cor, icone:icone});
+      estado.topicos.push({id:gerarId(), nome:nome, cor:cor});
     }
     persistirTudo();
     estado.modal = null;
