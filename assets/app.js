@@ -578,7 +578,7 @@
   function renderModalTopico(dados){
     var editando = !!dados.id;
     var cor = dados.cor || PALETA_PASTEL[0];
-    var html = '<div class="fundo-modal" data-acao="fechar-modal-fundo"><div class="modal" onclick="event.stopPropagation()">';
+    var html = '<div class="fundo-modal" data-acao="fechar-modal-fundo"><div class="modal">';
     html += '<h3>'+(editando?"Editar tópico":"Novo tópico")+'</h3>';
     html += '<div class="campo"><label>Nome</label><input type="text" id="campo-nome-topico" value="'+escapeAttr(dados.nome||"")+'" placeholder="Ex: Faculdade, Treinos, Casa..."></div>';
     html += '<div class="campo"><label>Cor</label><div class="grade-cores">';
@@ -597,7 +597,7 @@
     var editando = !!dados.id;
     var recorrencia = dados.recorrencia || "unica";
     var diasSemana = dados.diasSemana || [];
-    var html = '<div class="fundo-modal" data-acao="fechar-modal-fundo"><div class="modal" onclick="event.stopPropagation()">';
+    var html = '<div class="fundo-modal" data-acao="fechar-modal-fundo"><div class="modal">';
     html += '<h3>'+(editando?"Editar tarefa":"Nova tarefa")+'</h3>';
     html += '<div class="campo"><label>Título</label><input type="text" id="campo-titulo-tarefa" value="'+escapeAttr(dados.titulo||"")+'" placeholder="Ex: Tomar vitamina D"></div>';
     html += '<div class="campo"><label>Tópico</label><select id="campo-topico-tarefa" class="seletor-topico-form">';
@@ -633,7 +633,7 @@
   }
 
   function renderModalConfirmar(dados){
-    var html = '<div class="fundo-modal" data-acao="fechar-modal-fundo"><div class="modal" onclick="event.stopPropagation()">';
+    var html = '<div class="fundo-modal" data-acao="fechar-modal-fundo"><div class="modal">';
     html += '<h3>'+escapeHTML(dados.titulo)+'</h3>';
     html += '<p style="color:var(--ink-soft);font-size:0.92rem;">'+escapeHTML(dados.mensagem)+'</p>';
     html += '<div class="acoes-modal">';
