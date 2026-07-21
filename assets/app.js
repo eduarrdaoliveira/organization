@@ -276,8 +276,11 @@
     html += '<div class="conteudo linha-tarefa">';
     html += '<span class="titulo-tarefa">'+escapeHTML(tarefa.titulo)+'</span>';
     if(topico){
-      var avatarHtml = mostrarAvatarTopico ? ('<span class="avatar-topico" style="background:'+corTopico+'">'+escapeHTML(iniciais(topico.nome))+'</span>') : '';
-      html += '<span class="pilula-topico" style="background:'+corTopico+'14;color:'+corTopico+'">'+avatarHtml+escapeHTML(topico.nome)+'</span>';
+      if(mostrarAvatarTopico){
+        html += '<span class="pilula-topico" style="background:'+corTopico+'14;color:'+corTopico+'"><span class="avatar-topico" style="background:'+corTopico+'">'+escapeHTML(iniciais(topico.nome))+'</span>'+escapeHTML(topico.nome)+'</span>';
+      } else {
+        html += '<span class="avatar-topico avatar-topico-solo" style="background:'+corTopico+'" title="'+escapeAttr(topico.nome)+'">'+escapeHTML(iniciais(topico.nome))+'</span>';
+      }
     }
     if(tarefa.recorrencia==="diaria") html += '<span class="info-recorrencia">Diária</span>';
     if(tarefa.recorrencia==="semanal") html += '<span class="info-recorrencia">'+(tarefa.diasSemana||[]).map(function(n){return NOMES_DIAS[n];}).join(", ")+'</span>';
@@ -317,7 +320,7 @@
       html += '<div class="cabecalho-grupo">';
       html += '<button class="alternador-topico" data-acao="alternar-topico" data-topico="'+topico.id+'" aria-expanded="'+aberto+'">';
       html += '<span class="seta-alternador">'+ic("chevronRight")+'</span><span class="avatar-topico" style="background:'+topico.cor+'">'+escapeHTML(iniciais(topico.nome))+'</span>';
-      html += '<span class="nome-topico" style="color:'+topico.cor+'">'+escapeHTML(topico.nome)+'</span>';
+      html += '<span class="nome-topico">'+escapeHTML(topico.nome)+'</span>';
       html += '<span class="contador-topico">'+tarefasDoTopico.length+'</span></button>';
       html += '<div class="acoes-topico">';
       html += '<button class="btn-add-tarefa-topico" data-acao="abrir-modal-tarefa" data-topico="'+topico.id+'" title="Adicionar tarefa">＋ Tarefa</button>';
