@@ -6,7 +6,7 @@
   var CHAVE_TAREFAS = "organizador_tarefas_v1";
   var CHAVE_CONCLUSOES = "organizador_conclusoes_v1";
 
-  var TONS_CINZA = ["#1c1c1e","#48484a","#6e6e73","#8e8e93","#aeaeb2","#c7c7cc"];
+  var PALETA_PASTEL = ["#B7CBE0","#C9B8DE","#F0BFC4","#F3D3A6","#B9DBC7","#A9D4D8","#E3C2D9","#D9C9A6"];
 
   /* ---------- Ícones (SVG inline, sem emoji) ---------- */
   var ICONES = {
@@ -60,8 +60,8 @@
     if(!Array.isArray(lista)) return [];
     return lista.map(function(t, i){
       if(!t || typeof t !== "object") return t;
-      if(TONS_CINZA.indexOf(t.cor) === -1){
-        t.cor = TONS_CINZA[i % TONS_CINZA.length];
+      if(PALETA_PASTEL.indexOf(t.cor) === -1){
+        t.cor = PALETA_PASTEL[i % PALETA_PASTEL.length];
       }
       return t;
     });
@@ -89,6 +89,7 @@
   }
 
   var tentativasFalhas = 0;
+  var ultimoErroSync = "";
 
   function agendarSincronizacao(){
     if(!usuarioAtual || !db) return;
@@ -101,10 +102,12 @@
   function tentarSincronizar(tentativa){
     db.collection("usuarios").doc(usuarioAtual.uid).set(dadosAtuais(), {merge:true}).then(function(){
       tentativasFalhas = 0;
+      ultimoErroSync = "";
       statusSync = "salvo";
       render();
     }).catch(function(e){
       console.error("Erro ao sincronizar com o Firestore:", e);
+      ultimoErroSync = (e && (e.code || e.message)) ? (e.code||"")+" "+(e.message||"") : "Erro desconhecido";
       if(tentativa < 2){
         setTimeout(function(){ tentarSincronizar(tentativa+1); }, 1500);
       } else {
@@ -194,9 +197,10 @@
     var dataFormatada = diasSemanaLongo[d.getDay()]+", "+d.getDate()+" de "+NOMES_MESES[d.getMonth()]+" de "+d.getFullYear();
     var nome = usuarioAtual && (usuarioAtual.displayName || usuarioAtual.email || "Conta");
     var syncLabel = statusSync==="salvando"?"Salvando…":statusSync==="erro"?"Erro ao sincronizar":"Sincronizado";
+    var syncTitle = statusSync==="erro" ? ' title="'+escapeAttr(ultimoErroSync||"Toque para tentar novamente")+'" data-acao="tentar-sincronizar" style="cursor:pointer"' : '';
     return '<header class="topo">'
       + '<div><h1>Meu Organizador</h1><div class="data-hoje">'+dataFormatada+'</div></div>'
-      + '<div class="conta-ios"><div class="sync-status '+statusSync+'"><span></span>'+syncLabel+'</div><button class="avatar-conta" data-acao="sair" title="Sair">'+escapeHTML((nome||"U").charAt(0).toUpperCase())+'</button></div>'
+      + '<div class="conta-ios"><div class="sync-status '+statusSync+'"'+syncTitle+'><span></span>'+syncLabel+'</div><button class="avatar-conta" data-acao="sair" title="Sair">'+escapeHTML((nome||"U").charAt(0).toUpperCase())+'</button></div>'
       + '</header>';
   }
 
@@ -525,7 +529,7 @@
     var hoje = new Date(); hoje.setHours(0,0,0,0);
     var diaSemanaHoje = hoje.getDay();
     var fimGrade = new Date(hoje); fimGrade.setDate(fimGrade.getDate() + (6 - diaSemanaHoje));
-    var totalSemanas = 24;
+    var totalSemanas = 20;
     var inicioGrade = new Date(fimGrade); inicioGrade.setDate(inicioGrade.getDate() - (totalSemanas*7 - 1));
 
     var html = '<div class="heatmap">';
@@ -573,12 +577,12 @@
 
   function renderModalTopico(dados){
     var editando = !!dados.id;
-    var cor = dados.cor || TONS_CINZA[0];
+    var cor = dados.cor || PALETA_PASTEL[0];
     var html = '<div class="fundo-modal" data-acao="fechar-modal-fundo"><div class="modal" onclick="event.stopPropagation()">';
     html += '<h3>'+(editando?"Editar tópico":"Novo tópico")+'</h3>';
     html += '<div class="campo"><label>Nome</label><input type="text" id="campo-nome-topico" value="'+escapeAttr(dados.nome||"")+'" placeholder="Ex: Faculdade, Treinos, Casa..."></div>';
-    html += '<div class="campo"><label>Tom</label><div class="grade-cores">';
-    TONS_CINZA.forEach(function(c){
+    html += '<div class="campo"><label>Cor</label><div class="grade-cores">';
+    PALETA_PASTEL.forEach(function(c){
       html += '<button class="amostra-cor '+(c===cor?"selecionada":"")+'" style="background:'+c+'" data-acao="escolher-cor-topico" data-cor="'+c+'"></button>';
     });
     html += '</div></div>';
@@ -807,6 +811,11 @@
 
       case "tentar-novamente":
         render(); break;
+
+      case "tentar-sincronizar":
+        tentativasFalhas = 0;
+        tentarSincronizar(0);
+        break;
     }
   }
 
@@ -815,7 +824,7 @@
     var nomeInput = document.getElementById("campo-nome-topico");
     var nome = nomeInput.value.trim();
     if(!nome){ nomeInput.focus(); nomeInput.style.borderColor = "var(--danger)"; return; }
-    var cor = dados.cor || TONS_CINZA[0];
+    var cor = dados.cor || PALETA_PASTEL[0];
 
     if(dados.id){
       var topico = topicoPorId(dados.id);

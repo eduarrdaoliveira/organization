@@ -24,7 +24,7 @@ body{min-height:100vh;background:linear-gradient(180deg,#f7f7fa 0%,#f2f2f7 38%,#
 button,input,select,textarea{font:inherit}
 button{cursor:pointer;-webkit-tap-highlight-color:transparent}
 svg.icone{width:18px;height:18px;stroke:currentColor;stroke-width:1.8;fill:none;stroke-linecap:round;stroke-linejoin:round;display:block}
-.avatar-topico{width:20px;height:20px;border-radius:50%;color:#fff;font-size:.66rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex:0 0 auto}
+.avatar-topico{width:20px;height:20px;border-radius:50%;color:rgba(28,28,30,.72);font-size:.66rem;font-weight:750;display:flex;align-items:center;justify-content:center;flex:0 0 auto}
 .app{max-width:980px;margin:0 auto;padding:34px 22px 90px}
 header.topo{display:flex;align-items:flex-end;justify-content:space-between;gap:18px;margin-bottom:18px;padding:0 4px}
 header.topo h1{font-size:2.35rem;line-height:1.05;letter-spacing:-.045em;font-weight:750;margin:0}
