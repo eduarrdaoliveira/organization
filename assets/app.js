@@ -580,7 +580,7 @@
   }
 
   function renderModalErroSync(){
-    var html = '<div class="fundo-modal" data-acao="fechar-modal-fundo"><div class="modal">';
+    var html = '<div class="fundo-modal"><div class="modal">';
     html += '<h3>Erro ao sincronizar</h3>';
     html += '<p style="color:var(--ink-soft);font-size:0.9rem;margin-bottom:8px;">Seus dados continuam salvos neste aparelho, mas não foi possível enviá-los para a nuvem. Detalhe técnico:</p>';
     html += '<div class="aviso-ios" style="font-size:.78rem;word-break:break-word;">'+escapeHTML(ultimoErroSync||"Erro desconhecido")+'</div>';
@@ -594,7 +594,7 @@
   function renderModalTopico(dados){
     var editando = !!dados.id;
     var cor = dados.cor || PALETA_PASTEL[0];
-    var html = '<div class="fundo-modal" data-acao="fechar-modal-fundo"><div class="modal">';
+    var html = '<div class="fundo-modal"><div class="modal">';
     html += '<h3>'+(editando?"Editar tópico":"Novo tópico")+'</h3>';
     html += '<div class="campo"><label>Nome</label><input type="text" id="campo-nome-topico" value="'+escapeAttr(dados.nome||"")+'" placeholder="Ex: Faculdade, Treinos, Casa..."></div>';
     html += '<div class="campo"><label>Cor</label><div class="grade-cores">';
@@ -613,7 +613,7 @@
     var editando = !!dados.id;
     var recorrencia = dados.recorrencia || "unica";
     var diasSemana = dados.diasSemana || [];
-    var html = '<div class="fundo-modal" data-acao="fechar-modal-fundo"><div class="modal">';
+    var html = '<div class="fundo-modal"><div class="modal">';
     html += '<h3>'+(editando?"Editar tarefa":"Nova tarefa")+'</h3>';
     html += '<div class="campo"><label>Título</label><input type="text" id="campo-titulo-tarefa" value="'+escapeAttr(dados.titulo||"")+'" placeholder="Ex: Tomar vitamina D"></div>';
     html += '<div class="campo"><label>Tópico</label><select id="campo-topico-tarefa" class="seletor-topico-form">';
@@ -649,7 +649,7 @@
   }
 
   function renderModalConfirmar(dados){
-    var html = '<div class="fundo-modal" data-acao="fechar-modal-fundo"><div class="modal">';
+    var html = '<div class="fundo-modal"><div class="modal">';
     html += '<h3>'+escapeHTML(dados.titulo)+'</h3>';
     html += '<p style="color:var(--ink-soft);font-size:0.92rem;">'+escapeHTML(dados.mensagem)+'</p>';
     html += '<div class="acoes-modal">';
@@ -692,6 +692,29 @@
         var wrapSemanal = document.getElementById("campo-dias-semana-wrap");
         if(wrapUnica) wrapUnica.style.display = ev.target.value==="unica" ? "block":"none";
         if(wrapSemanal) wrapSemanal.style.display = ev.target.value==="semanal" ? "block":"none";
+      }
+    });
+
+    // mantém os campos de texto sincronizados com o estado do modal,
+    // para que um re-render (ex: escolher cor, marcar dia da semana) não apague o que já foi digitado
+    var CAMPOS_SINCRONIZADOS = {
+      "campo-nome-topico": "nome",
+      "campo-titulo-tarefa": "titulo",
+      "campo-horario-tarefa": "horario",
+      "campo-data-unica": "dataUnica",
+      "campo-topico-tarefa": "topicoId",
+      "campo-recorrencia-tarefa": "recorrencia"
+    };
+    document.addEventListener("input", function(ev){
+      var campo = ev.target && ev.target.id;
+      if(campo && CAMPOS_SINCRONIZADOS[campo] && estado.modal){
+        estado.modal.dados[CAMPOS_SINCRONIZADOS[campo]] = ev.target.value;
+      }
+    });
+    document.addEventListener("change", function(ev){
+      var campo = ev.target && ev.target.id;
+      if(campo && CAMPOS_SINCRONIZADOS[campo] && estado.modal){
+        estado.modal.dados[CAMPOS_SINCRONIZADOS[campo]] = ev.target.value;
       }
     });
   }
@@ -794,7 +817,6 @@
         render(); break;
 
       case "fechar-modal":
-      case "fechar-modal-fundo":
         estado.modal = null; render(); break;
 
       case "alternar-conclusao":
