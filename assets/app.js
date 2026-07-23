@@ -197,7 +197,7 @@
     var dataFormatada = diasSemanaLongo[d.getDay()]+", "+d.getDate()+" de "+NOMES_MESES[d.getMonth()]+" de "+d.getFullYear();
     var nome = usuarioAtual && (usuarioAtual.displayName || usuarioAtual.email || "Conta");
     var syncLabel = statusSync==="salvando"?"Salvando…":statusSync==="erro"?"Erro ao sincronizar":"Sincronizado";
-    var syncTitle = statusSync==="erro" ? ' title="'+escapeAttr(ultimoErroSync||"Toque para tentar novamente")+'" data-acao="tentar-sincronizar" style="cursor:pointer"' : '';
+    var syncTitle = statusSync==="erro" ? ' data-acao="ver-erro-sync" style="cursor:pointer"' : '';
     return '<header class="topo">'
       + '<div><h1>Meu Organizador</h1><div class="data-hoje">'+dataFormatada+'</div></div>'
       + '<div class="conta-ios"><div class="sync-status '+statusSync+'"'+syncTitle+'><span></span>'+syncLabel+'</div><button class="avatar-conta" data-acao="sair" title="Sair">'+escapeHTML((nome||"U").charAt(0).toUpperCase())+'</button></div>'
@@ -575,7 +575,20 @@
     if(m.tipo === "topico") return renderModalTopico(m.dados);
     if(m.tipo === "tarefa") return renderModalTarefa(m.dados);
     if(m.tipo === "confirmar") return renderModalConfirmar(m.dados);
+    if(m.tipo === "erroSync") return renderModalErroSync();
     return "";
+  }
+
+  function renderModalErroSync(){
+    var html = '<div class="fundo-modal" data-acao="fechar-modal-fundo"><div class="modal">';
+    html += '<h3>Erro ao sincronizar</h3>';
+    html += '<p style="color:var(--ink-soft);font-size:0.9rem;margin-bottom:8px;">Seus dados continuam salvos neste aparelho, mas não foi possível enviá-los para a nuvem. Detalhe técnico:</p>';
+    html += '<div class="aviso-ios" style="font-size:.78rem;word-break:break-word;">'+escapeHTML(ultimoErroSync||"Erro desconhecido")+'</div>';
+    html += '<div class="acoes-modal">';
+    html += '<button class="btn secundario" data-acao="fechar-modal">Fechar</button>';
+    html += '<button class="btn" data-acao="tentar-sincronizar">Tentar novamente</button>';
+    html += '</div></div></div>';
+    return html;
   }
 
   function renderModalTopico(dados){
@@ -815,9 +828,15 @@
       case "tentar-novamente":
         render(); break;
 
+      case "ver-erro-sync":
+        estado.modal = {tipo:"erroSync", dados:{}};
+        render(); break;
+
       case "tentar-sincronizar":
         tentativasFalhas = 0;
+        estado.modal = null;
         tentarSincronizar(0);
+        render();
         break;
     }
   }
@@ -917,7 +936,7 @@
       auth.onAuthStateChanged(async function(user){
         usuarioAtual=user||null;
         if(user){
-          try{ await carregarDaNuvem(user); }catch(e){ console.error(e); statusSync="erro"; }
+          try{ await carregarDaNuvem(user); }catch(e){ console.error(e); statusSync="erro"; ultimoErroSync = (e && (e.code || e.message)) ? (e.code||"")+" "+(e.message||"") : "Erro desconhecido"; }
         }
         inicializando=false; render();
       });
